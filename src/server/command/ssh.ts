@@ -1,13 +1,21 @@
 import { isUndefined } from 'lodash';
-import parseCommand from './parse';
-import logger from '../utils/logger';
+import { parseCommand } from './ssh/parse';
+import { logger } from '../../shared/logger';
 
-export default function sshOptions(
-  { pass, path, command, host, port, auth, knownhosts }: { [s: string]: string },
+export function sshOptions(
+  {
+    pass,
+    path,
+    command,
+    host,
+    port,
+    auth,
+    knownhosts,
+  }: { [s: string]: string },
   key?: string
 ): string[] {
   const cmd = parseCommand(command, path);
-  const hostChecking = (knownhosts !== '/dev/null') ? 'yes' : 'no'
+  const hostChecking = knownhosts !== '/dev/null' ? 'yes' : 'no';
   const sshRemoteOptsBase = [
     'ssh',
     host,
@@ -18,7 +26,7 @@ export default function sshOptions(
     `PreferredAuthentications=${auth}`,
     '-o',
     `UserKnownHostsFile=${knownhosts}`,
-    '-o', 
+    '-o',
     `StrictHostKeyChecking=${hostChecking}`,
   ];
   logger.info(`Authentication Type: ${auth}`);
@@ -32,8 +40,5 @@ export default function sshOptions(
     sshRemoteOptsBase.splice(sshRemoteOptsBase.indexOf('-o'), 2);
   }
 
-  if (cmd === '') {
-    return sshRemoteOptsBase;
-  }
-  return sshRemoteOptsBase.concat([cmd]);
+  return cmd === '' ? sshRemoteOptsBase : sshRemoteOptsBase.concat([cmd]);
 }
